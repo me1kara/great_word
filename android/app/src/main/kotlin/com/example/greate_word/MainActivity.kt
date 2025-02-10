@@ -14,8 +14,10 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import android.provider.Settings
 import android.net.Uri
+import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private val CHANNEL = "foreground_service"
     private var unlockReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,11 +27,20 @@ class MainActivity : FlutterActivity() {
         requestOverlayPermission() // SYSTEM_ALERT_WINDOW 권한 요청
 
         // 포그라운드 서비스 시작
-        val forServiceIntent = Intent(this, ForegroundService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(forServiceIntent)
-        } else {
-            startService(forServiceIntent)
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+            val manager = ForegroundServiceManager(this)
+
+            when (call.method) {
+                "startService" -> {
+                    manager.startForegroundService()
+                    result.success("Service Started")
+                }
+                "stopService" -> {
+                    manager.stopForegroundService()
+                    result.success("Service Stopped")
+                }
+                else -> result.notImplemented()
+            }
         }
     }
 

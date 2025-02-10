@@ -28,6 +28,8 @@ class _WordState extends State<Word> {
         child: Text(
           widget.title,
           overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          maxLines: _isExpanded ? 999 : 1,
         ),
       ),
     );

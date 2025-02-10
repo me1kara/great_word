@@ -1,11 +1,12 @@
 // words_screen.dart
 import 'package:flutter/material.dart';
+import 'package:greate_word/models/quote.dart';
 import 'package:greate_word/widgets/word.dart';
 
 class WordsScreen extends StatelessWidget {
   const WordsScreen({super.key, required this.quotes});
 
-  final List<String> quotes;
+  final List<Quote> quotes;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +23,7 @@ class WordsScreen extends StatelessWidget {
               for (var i = 0; i < quotes.length; i++)
                 Word(
                     title:
-                        "${i + 1}.${quotes[i]}"), // 'quotes' 배열을 사용하고, 'i'는 변수로
+                        "${i + 1}.${quotes[i].quote} \n -${quotes[i].author}-"), // 'quotes' 배열을 사용하고, 'i'는 변수로
             ],
           ),
         ),

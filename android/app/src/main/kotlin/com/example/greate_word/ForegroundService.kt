@@ -1,14 +1,7 @@
 package com.example.greate_word
 
-import android.app.ActivityManager
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.*
+import android.content.*
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -21,60 +14,57 @@ class ForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        // 포그라운드 서비스로 설정
+        // 알림 채널 생성 (Android 8.0 이상 필요)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "default", "Default", NotificationManager.IMPORTANCE_DEFAULT
+                "default", "Foreground Service",
+                NotificationManager.IMPORTANCE_LOW // 중요도를 낮춤 (알림 최소화)
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(channel)
         }
 
+        // 포그라운드 서비스 실행을 위한 알림 생성
         val notification = NotificationCompat.Builder(this, "default")
-            .setContentTitle("App is running in the background")
-            .setContentText("This is a foreground service.")
+            .setContentTitle("앱이 백그라운드에서 실행 중")
+            .setContentText("잠금 해제 시 앱을 실행합니다.")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
 
-        startForeground(1, notification)  // 포그라운드 서비스 시작
+        startForeground(1, notification)
 
-        // 잠금 해제 이벤트 리시버 등록
+        // 잠금 해제 감지 리시버 등록
         unlockReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == Intent.ACTION_USER_PRESENT) {
-                    Log.d("UnlockReceiver", "🔓 핸드폰 잠금 해제 감지됨! 앱 실행")
+                    Log.d("ForegroundService", "🔓 핸드폰 잠금 해제 감지됨! 앱 실행")
 
-                    val activityManager = context?.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-                    val runningTasks = activityManager.appTasks
-
-                    if (runningTasks.isNotEmpty()) {
-                        // 앱이 실행 중이면 최상위로 가져옴
-                        val moveIntent = Intent(context, MainActivity::class.java)
-                        moveIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                        context.startActivity(moveIntent)
-                    } else {
-                        // 앱이 실행 중이 아니면 새로 실행
-                        val launchIntent = context?.packageManager?.getLaunchIntentForPackage(context.packageName)
+                    context?.let {
+                        val launchIntent = it.packageManager?.getLaunchIntentForPackage(it.packageName)
                         launchIntent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        context?.startActivity(launchIntent)
+                        it.startActivity(launchIntent)
                     }
                 }
             }
         }
 
-        // 잠금 해제 이벤트 리시버 등록
+        // 리시버 등록
         val unlockFilter = IntentFilter(Intent.ACTION_USER_PRESENT)
         registerReceiver(unlockReceiver, unlockFilter)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // 리시버 해제
-        unregisterReceiver(unlockReceiver)
+        unlockReceiver?.let {
+            unregisterReceiver(it)
+            unlockReceiver = null
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY  // 서비스가 종료되지 않도록 설정
+        return START_STICKY  // 시스템이 종료해도 다시 시작됨
     }
 
     override fun onBind(intent: Intent?): IBinder? {

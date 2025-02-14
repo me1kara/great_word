@@ -88,6 +88,16 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
     });
   }
 
+  Future<void> _toggleFavorite(Quote quote) async {
+    for (var i = 0; i < quotes.length; i++) {
+      if (quotes[i].quote == quote.quote) {
+        setState(() {
+          quotes[i].isFavorite = !quotes[i].isFavorite;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,6 +138,19 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  IconButton(
+                    icon: Icon(
+                      currentQuote!.isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border, // 찜 상태에 따라 변경
+                      color:
+                          currentQuote!.isFavorite ? Colors.red : Colors.grey,
+                      size: 50,
+                    ),
+                    onPressed: () {
+                      _toggleFavorite(currentQuote!);
+                    },
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(

@@ -5,15 +5,31 @@ class Quote {
   final String quote;
   final String author;
   final String category;
+  bool isFavorite;
 
-  Quote({required this.quote, required this.author, required this.category});
+  Quote(
+      {required this.quote,
+      required this.author,
+      required this.category,
+      required this.isFavorite});
 
   factory Quote.fromJson(Map<String, dynamic> json) {
+    print(json);
     return Quote(
       quote: json['quote'],
       author: json['author'],
       category: json['category'],
+      isFavorite: json['isFavorite'],
     );
+  }
+  // JSON 직렬화
+  Map<String, dynamic> toJson() {
+    return {
+      'quote': quote,
+      'author': author,
+      'category': category,
+      'isFavorite': isFavorite,
+    };
   }
 }
 

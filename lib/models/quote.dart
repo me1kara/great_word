@@ -14,7 +14,6 @@ class Quote {
       required this.isFavorite});
 
   factory Quote.fromJson(Map<String, dynamic> json) {
-    print(json);
     return Quote(
       quote: json['quote'],
       author: json['author'],

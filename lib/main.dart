@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:greate_word/models/quote.dart';
+import 'package:greate_word/widgets/favorite_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:greate_word/widgets/words_screen.dart';
 import 'package:flutter/services.dart'; // 플랫폼 채널 사용
@@ -33,6 +34,7 @@ class RandomQuoteScreen extends StatefulWidget {
 class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
   static const platform = MethodChannel('foreground_service');
   bool _isForegroundEnabled = false;
+  QuotesManager manager = QuotesManager();
 
   List<Quote> quotes = [];
   Quote? currentQuote;
@@ -45,7 +47,9 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
   }
 
   Future<void> _loadQuotes() async {
-    List<Quote> loadedQuotes = await QuotesLoader.loadQuotes();
+    await manager.loadQuotes();
+    List<Quote> loadedQuotes = manager.quotes;
+
     setState(() {
       quotes = loadedQuotes;
       _generateRandomQuote(); // 앱 실행 시 랜덤 명언 표시
@@ -89,12 +93,15 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
   }
 
   Future<void> _toggleFavorite(Quote quote) async {
-    for (var i = 0; i < quotes.length; i++) {
-      if (quotes[i].quote == quote.quote) {
-        setState(() {
-          quotes[i].isFavorite = !quotes[i].isFavorite;
-        });
-      }
+    // 1. 리스트 내 해당 명언 찾기
+    int index = quotes.indexWhere((q) => q.id == quote.id);
+    if (index != -1) {
+      // 4. 변경된 찜 목록을 저장
+      await manager.toggleFavorite(quote.id);
+
+      setState(() {
+        currentQuote = quotes[index];
+      });
     }
   }
 
@@ -104,33 +111,44 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
       appBar: AppBar(
         centerTitle: true,
         elevation: 2,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('좋은말'),
-            ElevatedButton(
-              onPressed: () {
+        title: const Text('좋은말'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'allQuotes') {
+                // 일반 목록으로 이동
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => WordsScreen(
-                            quotes: quotes,
-                          )),
+                    builder: (context) => WordsScreen(
+                      quotes: quotes,
+                    ),
+                  ),
                 );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple.shade100, // 텍스트 색상
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10), // 모서리 둥글게
-                ),
+              } else if (value == 'favorites') {
+                // 찜 목록으로 이동
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FavoriteScreen(
+                      favoriteQuotes: quotes,
+                    ),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'allQuotes',
+                child: Text('일반 목록'),
               ),
-              child: const Text(
-                '목록',
-                style: TextStyle(color: Colors.black),
+              const PopupMenuItem<String>(
+                value: 'favorites',
+                child: Text('찜 목록'),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
       body: Center(
         child: currentQuote == null

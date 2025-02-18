@@ -46,7 +46,6 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(unlockReceiver)  // 리시버 해제
     }
 
     private fun requestOverlayPermission() {

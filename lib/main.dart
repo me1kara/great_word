@@ -71,6 +71,9 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
     setState(() {
       _isForegroundEnabled = prefs.getBool('foregroundEnabled') ?? false;
     });
+    if (_isForegroundEnabled) {
+      await platform.invokeMethod('startService');
+    }
   }
 
   Future<void> _toggleForeground(bool value) async {
@@ -140,7 +143,7 @@ class _RandomQuoteScreenState extends State<RandomQuoteScreen> {
             itemBuilder: (context) => [
               const PopupMenuItem<String>(
                 value: 'allQuotes',
-                child: Text('일반 목록'),
+                child: Text('단어 목록'),
               ),
               const PopupMenuItem<String>(
                 value: 'favorites',

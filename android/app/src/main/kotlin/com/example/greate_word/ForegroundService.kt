@@ -58,8 +58,12 @@ class ForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         unlockReceiver?.let {
-            unregisterReceiver(it)
-            unlockReceiver = null
+            try {
+                unregisterReceiver(it)
+                unlockReceiver = null
+            } catch (e: IllegalArgumentException) {
+                Log.e("ForegroundService", "리시버를 등록 해제하는데 실패했습니다: ${e.message}")
+            }
         }
     }
 

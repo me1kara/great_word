@@ -10,7 +10,6 @@ class ForegroundServiceManager(private val context: Context) {
 
     fun startForegroundService() {
         val intent = Intent(context, ForegroundService::class.java)
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent) // 수정된 부분
         } else {
